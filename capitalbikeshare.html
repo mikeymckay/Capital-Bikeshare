@@ -1,0 +1,83 @@
+<!DOCTYPE html> 
+<html> 
+	<head> 
+	<title>Page Title</title> 
+	<link rel='stylesheet' href='jquery.mobile-1.0a3.min.css' />
+	<script type='text/javascript' src='jquery.min.js'></script>
+	<script type='text/javascript' src='ICanHaz.js'></script>
+  <script id="jqueryMobilePageTemplate" type="text/html">
+<div id='{{pageId}}' data-role='page'>
+
+	<div data-role='header'>
+		<h1>{{header}}</h1>
+	</div><!-- /header -->
+
+	<div data-role='content'>	
+    {{{content}}}
+	</div><!-- /content -->
+
+	<div data-role='footer'>
+		<h4>{{{footer}}}</h4>
+	</div><!-- /footer -->
+
+</div><!-- /page -->
+  </script>
+  <script id="stationTemplate" type="text/html">
+    <div>
+      Name: {{name}}<br/>
+      Lat: {{lat}}<br/>
+      Long: {{long}}<br/>
+      Installed: {{installed}}<br/>
+      Locked: {{locked}}<br/>
+      Install Date: {{installDate}}<br/>
+      Removal Date{{removalDate}}<br/>
+      Temporary{{temporary}}<br/>
+      # Bikes: {{nbBikes}}<br/>
+      # Docks: {{nbEmptyDocks}}<br/>
+    </div>
+  </script>
+
+  <script>
+    $(document).bind("mobileinit", function(){
+      $.mobile.autoInitialize = false;
+    });
+
+    handleData = function(data){
+      stationData = data.query.results.stations.station;
+    };
+
+    $(document).ready(function (){
+
+      // Make index page
+      var stations = "";
+      var header = "Stations";
+      var footer = "";
+      var pageId = "index"
+      for (i=0;i<stationData.length;i++){
+        station = stationData[i];
+        stations += "<li><a href='#"+station.id+"'>"+station.name+"</a></li>";
+      }
+      content = "<ul data-role='listview' data-filter='true' data-theme='g'>"+stations+"</ul>"
+      $('body').append(ich.jqueryMobilePageTemplate({pageId:pageId,header:header,content:content,footer:footer}));
+
+      for (i=0;i<stationData.length;i++){
+        station = stationData[i];
+        pageId = station.id
+        header = station.name
+        console.log(station)
+        global = station
+        content = ich.stationTemplate(station)
+        console.log(content.html())
+        footer = "<a href='#index'>Index</a>"
+        $('body').append(ich.jqueryMobilePageTemplate({pageId:pageId,header:header,content:content.html(),footer:footer}));
+      }
+
+      $.mobile.initializePage();
+    });
+
+  </script>
+  <script type="text/javascript" src="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.capitalbikeshare.com%2Fstations%2FbikeStations.xml'&format=json&diagnostics=true&callback=handleData"></script>
+	<script type='text/javascript' src='http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.js'></script>
+</head> 
+<body></body>
+</html>
