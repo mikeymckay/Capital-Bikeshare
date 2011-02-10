@@ -5,22 +5,13 @@
 	<link rel='stylesheet' href='jquery.mobile-1.0a3.min.css' />
 	<script type='text/javascript' src='jquery.min.js'></script>
 	<script type='text/javascript' src='ICanHaz.js'></script>
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
   <script id="jqueryMobilePageTemplate" type="text/html">
     <div id='{{pageId}}' data-role='page' class='{{class}}'>
-
-      <div data-role='header'>
-        <h1>{{header}}</h1>
-      </div><!-- /header -->
-
-      <div data-role='content'>	
-        {{{content}}}
-      </div><!-- /content -->
-
-      <div data-role='footer'>
-        <h4>{{{footer}}}</h4>
-      </div><!-- /footer -->
-
-    </div><!-- /page -->
+      <div data-role='header'><h1>{{header}}</h1></div>
+      <div data-role='content'>{{{content}}}</div>
+      <div data-role='footer'><h5>{{{footer}}}</h4></div>
+    </div>
   </script>
   <script id="stationTemplate" type="text/html">
     <div>
@@ -38,33 +29,17 @@
     </div>
   </script>
   <script id="mapTemplate" type='text/html'>
-    <div data-role="content" style="width:100%; height:100%; padding:0;">
-      <div id="map_canvas" style="width:100%; height:50%;"></div>
+    <div id='map' data-role='page' class='station_map' style="width:100%; height:100%;">
+      <div data-role='header'><h1>{{header}}</h1></div>
+      <div data-role="content" style="width:100%; height:100%; padding:0;">
+        <div id="map_canvas" style="width:100%; height:100%;"></div>
+      </div>
+      <div data-role='footer'><h4>{{footer}}</h4></div>
     </div>
   </script>
-
-  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
   <script type="text/javascript">
-  // When map page opens get location and display map
-  $('.station_map').live("pagecreate", function() {
-    if(navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position){
-        initializeMap(position.coords.latitude,position.coords.longitude);
-      });
-    }
-  });
 
-  function initializeMap(lat,lng) {
-    var latlng = new google.maps.LatLng(lat, lng);
-    var myOptions = {
-      zoom: 8,
-      center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-
-    var map = new google.maps.Map(document.getElementById("map_canvas"),myOptions);
-  }
-
+    // Stop Jquery from converting the dom before we are ready
     $(document).bind("mobileinit", function(){
       $.mobile.autoInitialize = false;
     });
@@ -74,56 +49,67 @@
     };
 
     $(document).ready(function (){
-
       // Make index page
-      var stations = "";
-      var header = "Stations";
-      var footer = "";
-      var pageId = "index"
+      var stationsList = ""
       for (i=0;i<stationData.length;i++){
         station = stationData[i];
-        stations += "<li><a href='#"+station.id+"'>"+station.name+"</a></li>";
+        stationsList += "<li><a href='#"+station.id+"'>"+station.name+"</a></li>";
       }
-      content = "<ul data-role='listview' data-filter='true' data-theme='g'>"+stations+"</ul>"
-      $('body').append(ich.jqueryMobilePageTemplate({pageId:pageId,header:header,content:content,footer:footer}));
+      $('body').append(ich.jqueryMobilePageTemplate({
+        pageId: "index",
+        header: "Stations",
+        content: "<ul data-role='listview' data-filter='true' data-theme='g'>"+stationsList+"</ul>",
+        footer: ""
+      }));
 
+      // Make station pages
       for (i=0;i<stationData.length;i++){
         station = stationData[i];
-        templateData = {
+        $('body').append(ich.jqueryMobilePageTemplate({
           "class": "station",
           pageId: station.id,
           header: station.name,
           content: ich.stationTemplate(station).html(),
           footer: "<a data-role='button' href='#index'>Index</a>"
-        }
-        $('body').append(ich.jqueryMobilePageTemplate(templateData));
+        }));
       }
 
-      if (document.location.hash == "")
-        document.location.hash = "#index"
+      // Make map page
+        $('body').append(ich.mapTemplate({
+          "class": "station",
+          pageId: "map",
+          header: "map",
+          footer: "<a data-role='button' href='#index'>Index</a>"
+        }));
 
+      // Allow jquery mobile to convert all of our divs into jquery mobile pages
       $.mobile.initializePage();
     });
+
+    // When map page opens get location and display map
+    $('.station_map').live("pagecreate", function() {
+      if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position){
+          initializeMap(position.coords.latitude,position.coords.longitude);
+        });
+      }
+    });
+
+    function initializeMap(lat,lng) {
+      var latlng = new google.maps.LatLng(lat, lng);
+      var myOptions = {
+        zoom: 8,
+        center: latlng,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+
+      var map = new google.maps.Map(document.getElementById("map_canvas"),myOptions);
+    }
 
   </script>
   <script type="text/javascript" src="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.capitalbikeshare.com%2Fstations%2FbikeStations.xml'&format=json&diagnostics=true&callback=handleData"></script>
 	<script type='text/javascript' src='http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.js'></script>
 </head> 
 <body>
-  <div id='map' data-role='page' class='station_map' style="width:100%; height:100%;">
-
-    <div data-role='header'>
-      <h1>MAP!</h1>
-    </div><!-- /header -->
-
-    <div data-role="content" style="width:100%; height:100%; padding:0;">
-      <div id="map_canvas" style="width:100%; height:100%;"></div>
-    </div>
-
-    <div data-role='footer'>
-      <h4>MAP!</h4>
-    </div><!-- /footer -->
-
-  </div><!-- /page -->
 </body>
 </html>
