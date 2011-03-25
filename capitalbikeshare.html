@@ -5,7 +5,9 @@
 	<link rel='stylesheet' href='jquery.mobile-1.0a3.min.css' />
 	<script type='text/javascript' src='jquery.min.js'></script>
 	<script type='text/javascript' src='ICanHaz.js'></script>
-  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+	<script type='text/javascript' src='jquery.cookie.js'></script>
+  <script type="text/javascript" src="underscore-min.js"></script>
+  <script type="text/javascript" src="capitalbikeshare.js"></script>
 
   <script id="jqueryMobilePageTemplate" type="text/html">
     <div id='{{pageId}}' data-role='page' class='{{class}}'>
@@ -16,6 +18,7 @@
   </script>
   <script id="stationTemplate" type="text/html">
     <div>
+      <!--
       Name: {{name}}<br/>
       Lat: {{lat}}<br/>
       Long: {{long}}<br/>
@@ -24,9 +27,10 @@
       Install Date: {{installDate}}<br/>
       Removal Date{{removalDate}}<br/>
       Temporary{{temporary}}<br/>
-      # Bikes: {{nbBikes}}<br/>
-      # Docks: {{nbEmptyDocks}}<br/>
-      <a data-role='button' onClick='lat={{lat}};long={{long}}' href='#map'>Map</a>
+      -->
+      Bikes: {{nbBikes}}<br/>
+      Docks: {{nbEmptyDocks}}<br/>
+      <a data-role='button' onClick='alert("yo");lat={{lat}};long={{long}}' href='#map'>Map</a>
     </div>
   </script>
   <script id="mapTemplate" type='text/html'>
@@ -38,79 +42,10 @@
       <div data-role='footer'><h4>{{footer}}</h4></div>
     </div>
   </script>
-  <script type="text/javascript">
-
-    // Stop Jquery from converting the dom before we are ready
-    $(document).bind("mobileinit", function(){
-      $.mobile.autoInitialize = false;
-    });
-
-    handleData = function(data){
-      stationData = data.query.results.stations.station;
-    };
-
-    $(document).ready(function (){
-      // Make index page
-      var stationsList = ""
-      for (i=0;i<stationData.length;i++){
-        station = stationData[i];
-        stationsList += "<li><a href='#"+station.id+"'>"+station.name+"</a></li>";
-      }
-      $('body').append(ich.jqueryMobilePageTemplate({
-        pageId: "index",
-        header: "Stations",
-        content: "<ul data-role='listview' data-filter='true' data-theme='g'>"+stationsList+"</ul>",
-        footer: ""
-      }));
-
-      // Make station pages
-      for (i=0;i<stationData.length;i++){
-        station = stationData[i];
-        $('body').append(ich.jqueryMobilePageTemplate({
-          "class": "station",
-          pageId: station.id,
-          header: station.name,
-          content: ich.stationTemplate(station).html(),
-          footer: "<a data-role='button' href='#index'>Index</a>"
-        }));
-      }
-
-      // Make map page
-        $('body').append(ich.mapTemplate({
-          "class": "station",
-          pageId: "map",
-          header: "map",
-          footer: "<a data-role='button' href='#index'>Index</a>"
-        }));
-
-      // Allow jquery mobile to convert all of our divs into jquery mobile pages
-      $.mobile.initializePage();
-    });
-
-    // When map page opens get location and display map
-    $('.station_map').live("pagecreate", function() {
-      if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position){
-          initializeMap(position.coords.latitude,position.coords.longitude);
-        });
-      }
-    });
-
-    function initializeMap(lat,lng) {
-      var latlng = new google.maps.LatLng(lat, lng);
-      var myOptions = {
-        zoom: 13,
-        center: latlng,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
-
-      var map = new google.maps.Map(document.getElementById("map_canvas"),myOptions);
-    }
-
-  </script>
   <script type="text/javascript" src="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.capitalbikeshare.com%2Fstations%2FbikeStations.xml'&format=json&diagnostics=true&callback=handleData"></script>
 	<script type='text/javascript' src='jquery.mobile-1.0a3.min.js'></script>
-</head> 
-<body>
-</body>
+  </head> 
+  <body>
+  </body>
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 </html>
