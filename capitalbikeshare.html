@@ -28,9 +28,13 @@
       Removal Date{{removalDate}}<br/>
       Temporary{{temporary}}<br/>
       -->
-      Bikes: {{nbBikes}}<br/>
-      Docks: {{nbEmptyDocks}}<br/>
-      <a data-role='button' onClick='alert("yo");lat={{lat}};long={{long}}' href='#map'>Map</a>
+
+      <h1>Bikes: {{nbBikes}}<h1>
+      <h1>Docks: {{nbEmptyDocks}}</h1>
+      <div data-inline='true'>
+        <a data-inline='true' data-role='button' href='http://mikeymckay.cloudant.com/capital-bikeshare/_design/app/index.html#/station/{{id}}'>Usage</a>
+        <a data-inline='true' data-role='button' onClick='lat={{lat}};long={{long}}' href='#map'>Map</a>
+      </div>
     </div>
   </script>
   <script id="mapTemplate" type='text/html'>
