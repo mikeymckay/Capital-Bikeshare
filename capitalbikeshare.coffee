@@ -15,7 +15,6 @@ class FrequentStations
     #$.cookie("frequent_stations","")
     @data = $.cookie("frequent_stations")
     if @data
-      console.log @data
       @data = JSON.parse(@data)
     else
       @data = {}
@@ -34,12 +33,15 @@ class FrequentStations
     @save()
 
   sortedList: () ->
-    # todo sorting
-    sortedByPopularity = @data
+    # convert from collection to array
+    stationFrequencyArray = ({stationId, frequency} for stationId, frequency of @data)
+    stationsSortedByFrequency = _.sortBy stationFrequencyArray, (station) ->
+      -station.frequency
     result = ""
-    for stationId, frequency of sortedByPopularity
-      station = stationDataById[stationId]
-      result += "<li><a href='##{stationId}'>#{station.name} (#{station.nbBikes} bikes, #{station.nbEmptyDocks||0} docks) </a></li>" if station?
+    for station in stationsSortedByFrequency
+      station = stationDataById[station.stationId]
+      if station?
+        result += "<li><a href='##{station.id}'>#{station.nbBikes} <small>bikes</small> #{station.nbEmptyDocks||0} <small>docks</small> #{station.name} </a></li>" if station?
     return result
 
 frequentStations = new FrequentStations()
@@ -48,15 +50,15 @@ $(document).ready( ->
 # Make index page
   stationsList = ""
   for station in stationData
-    stationsList += "<li><a href='#"+station.id+"'>"+station.name+"</a></li>"
+    stationsList += "<li id='station#{station.id}'><a href='#"+station.id+"'>"+station.name+"</a></li>"
 
   content = ""
   content += "<b>Your top viewed stations:</b><br/><br/><ul data-role='listview' data-theme='g'>"+frequentStations.sortedList()+"</ul><br/>" unless frequentStations.empty()
-  content +="<b>All stations</b><br/><br/><ul data-role='listview' data-filter='true' data-theme='g'>"+stationsList+"</ul>"
+  content +="<b>All stations</b> <small>(sorted by distance when possible)</small><br/><br/><ul id='allStationsByDistance' data-role='listview' data-filter='true' data-theme='g'>"+stationsList+"</ul>"
 
   $('body').append(ich.jqueryMobilePageTemplate({
     pageId: "index",
-    header: "Stations",
+    header: "<a data-inline='true' data-role='button' rel='external' href='map.html'>Map</a>",
     content: content,
     footer: ""
   }))
@@ -71,38 +73,22 @@ $(document).ready( ->
       footer: "<a data-role='button' href='#index'>Index</a>"
     }))
 
-  # Make map page
-    $('body').append(ich.mapTemplate({
-      "class": "station",
-      pageId: "map",
-      header: "map",
-      footer: "<a data-role='button' href='#index'>Index</a>"
-    }))
-
   # Allow jquery mobile to convert all of our divs into jquery mobile pages
   $.mobile.initializePage()
 )
-
-# When map page opens get location and display map
-$('.station_map').live("pagecreate", ->
-  if navigator.geolocation
-    navigator.geolocation.getCurrentPosition((position) ->
-      initializeMap(position.coords.latitude,position.coords.longitude)
-    )
-)
-
-initializeMap = (lat,lng) ->
-  latlng = new google.maps.LatLng(lat, lng)
-  myOptions = {
-    zoom: 13,
-    center: latlng,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  }
-
-  map = new google.maps.Map(document.getElementById("map_canvas"),myOptions)
 
 
 $('div').live('pageshow', (event, ui) ->
   currentPageIndex = document.location.hash.substring(1)
   frequentStations.addStation(currentPageIndex) if parseInt(currentPageIndex)
+
+  if navigator.geolocation
+    navigator.geolocation.getCurrentPosition (position) ->
+      stationsByDistance = _.sortBy stationData, (station) ->
+        return -distance(position.coords.latitude, station.lat, position.coords.longitude - station.long)
+      for station in stationsByDistance
+        newElement = $("#station#{station.id}").clone()
+        $("#station#{station.id}").remove()
+        $('#allStationsByDistance').prepend(newElement.html())
+
 )

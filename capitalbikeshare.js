@@ -1,4 +1,4 @@
-var FrequentStations, frequentStations, handleData, initializeMap, stationData, stationDataById;
+var FrequentStations, frequentStations, handleData, stationData, stationDataById;
 $(document).bind("mobileinit", function() {
   return $.mobile.autoInitialize = false;
 });
@@ -18,7 +18,6 @@ FrequentStations = (function() {
   function FrequentStations() {
     this.data = $.cookie("frequent_stations");
     if (this.data) {
-      console.log(this.data);
       this.data = JSON.parse(this.data);
     } else {
       this.data = {};
@@ -41,14 +40,31 @@ FrequentStations = (function() {
     return this.save();
   };
   FrequentStations.prototype.sortedList = function() {
-    var frequency, result, sortedByPopularity, station, stationId;
-    sortedByPopularity = this.data;
+    var frequency, result, station, stationFrequencyArray, stationId, stationsSortedByFrequency, _i, _len;
+    stationFrequencyArray = (function() {
+      var _ref, _results;
+      _ref = this.data;
+      _results = [];
+      for (stationId in _ref) {
+        frequency = _ref[stationId];
+        _results.push({
+          stationId: stationId,
+          frequency: frequency
+        });
+      }
+      return _results;
+    }).call(this);
+    stationsSortedByFrequency = _.sortBy(stationFrequencyArray, function(station) {
+      return -station.frequency;
+    });
     result = "";
-    for (stationId in sortedByPopularity) {
-      frequency = sortedByPopularity[stationId];
-      station = stationDataById[stationId];
+    for (_i = 0, _len = stationsSortedByFrequency.length; _i < _len; _i++) {
+      station = stationsSortedByFrequency[_i];
+      station = stationDataById[station.stationId];
       if (station != null) {
-        result += "<li><a href='#" + stationId + "'>" + station.name + " (" + station.nbBikes + " bikes, " + (station.nbEmptyDocks || 0) + " docks) </a></li>";
+        if (station != null) {
+          result += "<li><a href='#" + station.id + "'>" + station.nbBikes + " <small>bikes</small> " + (station.nbEmptyDocks || 0) + " <small>docks</small> " + station.name + " </a></li>";
+        }
       }
     }
     return result;
@@ -61,16 +77,16 @@ $(document).ready(function() {
   stationsList = "";
   for (_i = 0, _len = stationData.length; _i < _len; _i++) {
     station = stationData[_i];
-    stationsList += "<li><a href='#" + station.id + "'>" + station.name + "</a></li>";
+    stationsList += ("<li id='station" + station.id + "'><a href='#") + station.id + "'>" + station.name + "</a></li>";
   }
   content = "";
   if (!frequentStations.empty()) {
     content += "<b>Your top viewed stations:</b><br/><br/><ul data-role='listview' data-theme='g'>" + frequentStations.sortedList() + "</ul><br/>";
   }
-  content += "<b>All stations</b><br/><br/><ul data-role='listview' data-filter='true' data-theme='g'>" + stationsList + "</ul>";
+  content += "<b>All stations</b> <small>(sorted by distance when possible)</small><br/><br/><ul id='allStationsByDistance' data-role='listview' data-filter='true' data-theme='g'>" + stationsList + "</ul>";
   $('body').append(ich.jqueryMobilePageTemplate({
     pageId: "index",
-    header: "Stations",
+    header: "<a data-inline='true' data-role='button' rel='external' href='map.html'>Map</a>",
     content: content,
     footer: ""
   }));
@@ -83,36 +99,29 @@ $(document).ready(function() {
       content: ich.stationTemplate(station).html(),
       footer: "<a data-role='button' href='#index'>Index</a>"
     }));
-    $('body').append(ich.mapTemplate({
-      "class": "station",
-      pageId: "map",
-      header: "map",
-      footer: "<a data-role='button' href='#index'>Index</a>"
-    }));
   }
   return $.mobile.initializePage();
 });
-$('.station_map').live("pagecreate", function() {
-  if (navigator.geolocation) {
-    return navigator.geolocation.getCurrentPosition(function(position) {
-      return initializeMap(position.coords.latitude, position.coords.longitude);
-    });
-  }
-});
-initializeMap = function(lat, lng) {
-  var latlng, map, myOptions;
-  latlng = new google.maps.LatLng(lat, lng);
-  myOptions = {
-    zoom: 13,
-    center: latlng,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  };
-  return map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-};
 $('div').live('pageshow', function(event, ui) {
   var currentPageIndex;
   currentPageIndex = document.location.hash.substring(1);
   if (parseInt(currentPageIndex)) {
-    return frequentStations.addStation(currentPageIndex);
+    frequentStations.addStation(currentPageIndex);
+  }
+  if (navigator.geolocation) {
+    return navigator.geolocation.getCurrentPosition(function(position) {
+      var newElement, station, stationsByDistance, _i, _len, _results;
+      stationsByDistance = _.sortBy(stationData, function(station) {
+        return -distance(position.coords.latitude, station.lat, position.coords.longitude - station.long);
+      });
+      _results = [];
+      for (_i = 0, _len = stationsByDistance.length; _i < _len; _i++) {
+        station = stationsByDistance[_i];
+        newElement = $("#station" + station.id).clone();
+        $("#station" + station.id).remove();
+        _results.push($('#allStationsByDistance').prepend(newElement.html()));
+      }
+      return _results;
+    });
   }
 });

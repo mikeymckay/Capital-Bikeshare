@@ -1,19 +1,20 @@
 <!DOCTYPE html> 
 <html> 
 	<head> 
-	<title>Capital Bikeshare</title> 
+	<title>BikeShare DC</title> 
 	<link rel='stylesheet' href='jquery.mobile-1.0a3.min.css' />
 	<script type='text/javascript' src='jquery.min.js'></script>
 	<script type='text/javascript' src='ICanHaz.js'></script>
 	<script type='text/javascript' src='jquery.cookie.js'></script>
   <script type="text/javascript" src="underscore-min.js"></script>
   <script type="text/javascript" src="capitalbikeshare.js"></script>
+  <script type="text/javascript" src="distance.js"></script>
 
   <script id="jqueryMobilePageTemplate" type="text/html">
     <div id='{{pageId}}' data-role='page' class='{{class}}'>
-      <div data-role='header'><h1>{{header}}</h1></div>
+      <div data-role='header'><h1>{{{header}}}</h1></div>
       <div data-role='content'>{{{content}}}</div>
-      <div data-role='footer'><h5>{{{footer}}}</h4></div>
+      <div data-role='footer'><h4>{{{footer}}}</h4></div>
     </div>
   </script>
   <script id="stationTemplate" type="text/html">
@@ -33,17 +34,8 @@
       <h1>Docks: {{nbEmptyDocks}}</h1>
       <div data-inline='true'>
         <a data-inline='true' data-role='button' href='http://mikeymckay.couchone.com/capital-bikeshare/_design/app/index.html#/station/{{id}}'>Usage</a>
-        <a data-inline='true' data-role='button' onClick='lat={{lat}};long={{long}}' href='#map'>Map</a>
+        <a data-inline='true' data-role='button' rel='external' href='map.html?long={{long}}&lat={{lat}}'>Map</a>
       </div>
-    </div>
-  </script>
-  <script id="mapTemplate" type='text/html'>
-    <div id='map' data-role='page' class='station_map' style="width:100%; height:100%;">
-      <div data-role='header'><h1>{{header}}</h1></div>
-      <div data-role="content" style="width:100%; height:100%; padding:0;">
-        <div id="map_canvas" style="width:100%; height:100%;"></div>
-      </div>
-      <div data-role='footer'><h4>{{footer}}</h4></div>
     </div>
   </script>
   <script type="text/javascript" src="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.capitalbikeshare.com%2Fstations%2FbikeStations.xml'&format=json&diagnostics=true&callback=handleData"></script>
@@ -51,5 +43,4 @@
   </head> 
   <body>
   </body>
-  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 </html>

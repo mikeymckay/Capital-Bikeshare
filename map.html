@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>BikeShare DC Map</title>
+    <style type="text/css">
+      body{
+        margin: 0px;
+        background-color: #2E2E2E;
+      }
+      #map{
+        margin: 0px;
+        margin-top: 10px;
+      }
+      a {
+        font-family: Arial,sans-serif;
+        padding: 5px 10px;
+        display: inline;
+        background-color: #585858;
+        border: solid black 1px;
+        color: white;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: 10px;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+      }
+    </style>
+    <title>Google Maps</title>
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAPDUET0Qt7p2VcSk6JNU1sBSM5jMcmVqUpI7aqV44cW1cEECiThQYkcZUPRJn9vy_TWxWvuLoOfSFBw" type="text/javascript"></script>
+    <script src="elabel.js" type="text/javascript"></script>
+    <script type='text/javascript' src='jquery.min.js'></script>
+  </head>
+
+  <body onunload="GUnload()">
+    <br/>
+    <center>
+      <a href='index.html'>Station List</a>
+    </center>
+    <div id="map" style="padding:0"></div>
+  </body>
+    
+    <script type="text/javascript">
+    //<![CDATA[
+
+    $('#map').css("width",$(window).width() + "px")
+    $('#map').css("height",$(window).height() - 50 + "px")
+
+    if (GBrowserIsCompatible()) { 
+
+      function createMarker(point,html) {
+        var marker = new GMarker(point);
+        GEvent.addListener(marker, "click", function() {
+          marker.openInfoWindowHtml(html);
+          last_marker = marker;
+        });
+        return marker;
+      }
+
+      qs = document.location.search.split("+").join(" ");
+      var params = {},
+          tokens,
+          re = /[?&]?([^=]+)=([^&]*)/g;
+
+      while (tokens = re.exec(qs)) {
+          params[decodeURIComponent(tokens[1])]
+              = decodeURIComponent(tokens[2]);
+      }
+
+
+      var initialLocation = new google.maps.LatLng(38.895307000000003,-77.014536000000007);
+      if (params.long && params.lat)
+        initialLocation = new google.maps.LatLng(params.lat,params.long)
+
+
+      var map = new GMap2(document.getElementById("map"));
+      map.setCenter(initialLocation,15);
+      map.addControl(new GLargeMapControl());
+      map.addControl(new GMapTypeControl());
+    
+      var get_points = function(data){
+        
+        var bounds = new google.maps.LatLngBounds();
+
+        stationData = data.query.results.stations.station;
+        for (_i = 0, _len = stationData.length; _i < _len; _i++) {
+          station = stationData[_i];
+          var station_id		= station.id;
+          var station_name	= station.name;
+          var installed		= station.installed;
+          var temporary		= station.temporary;
+          var locked			= station.locked;
+          var removal_date	= station.removalDate;
+          var num_bikes		= station.nbBikes;
+          var num_empty_docks = station.nbEmptyDocks;
+          
+          var station_lat		= station.lat;
+          var station_long	= station.long;
+
+          var cb_icon = 'stations/cb-map-icon.png';
+          var cb_station_link = '<br /><a href="/user/add_station/'+station_id+'/0">+ add to My Stations</a>';
+          
+          // change the icon if it's a planned station
+          if(installed != 'true')
+          {
+            cb_icon = 'stations/cb-map-icon-planned.png';
+            cb_station_link = '';
+          }
+          else if(temporary == 'true')
+          {
+            // is this "Special Event"? See: http://www.bixi.com/the-stations
+          }
+          else if(locked == 'true')
+          {
+            cb_icon = 'stations/cb-map-icon-outofservice.png';
+            cb_station_link = '';
+          }
+
+          
+          var point = new google.maps.LatLng( station_lat , station_long );
+
+          var stationInfo = '<div style="padding: 0px 0px 8px 8px; background: url(point_bottom_left.png) no-repeat bottom left;"><div style="color:white;background-color: #000000; padding: 2px;"><b>';
+          if (num_bikes == 0){
+            stationInfo += "<span style='color:red'>" + num_bikes + 'b </span>';
+          }
+          else{
+            stationInfo += num_bikes + 'b ';
+          }
+          if (num_empty_docks == 0){
+            stationInfo += "<span style='color:red'>" + num_empty_docks + 'd </span>';
+          }
+          else{
+            stationInfo += num_empty_docks + 'd ';
+          }
+          stationInfo += '<\/b><\/div><\/div>';
+
+          var elabel = new ELabel(point, stationInfo, null, null, 65);
+
+          map.addOverlay(elabel);
+        }
+        
+        // reset the center of the map and zoom to the bounds
+        // gmap.fitBounds(bounds);
+
+        if (!(params.long && params.lat)){
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              var currentLocation = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+              map.setCenter(currentLocation);
+              map.setZoom(15);
+            });
+          }
+        }
+      }
+    }
+    
+    // display a warning if the browser was not compatible
+    else {
+      alert("Sorry, the Google Maps API is not compatible with this browser");
+    }
+
+    // This Javascript is based on code provided by the
+    // Community Church Javascript Team
+    // http://www.bisphamchurch.org.uk/   
+    // http://econym.org.uk/gmap/
+
+    //]]>
+    </script>
+  <script type="text/javascript" src="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.capitalbikeshare.com%2Fstations%2FbikeStations.xml'&format=json&diagnostics=true&callback=get_points"></script>
+
+</html>
+
+
+
+
+
