@@ -77,7 +77,7 @@ $(document).ready(function() {
   stationsList = "";
   for (_i = 0, _len = stationData.length; _i < _len; _i++) {
     station = stationData[_i];
-    stationsList += ("<li id='station" + station.id + "'><a href='#") + station.id + "'>" + station.name + "</a></li>";
+    stationsList += "<li id='station" + station.id + "'><a href='#" + station.id + "'>" + station.nbBikes + " <small>b</small> " + (station.nbEmptyDocks || 0) + " <small>d</small> " + station.name + " </a></li>";
   }
   content = "";
   if (!frequentStations.empty()) {

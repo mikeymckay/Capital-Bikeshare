@@ -50,7 +50,7 @@ $(document).ready( ->
 # Make index page
   stationsList = ""
   for station in stationData
-    stationsList += "<li id='station#{station.id}'><a href='#"+station.id+"'>"+station.name+"</a></li>"
+    stationsList += "<li id='station#{station.id}'><a href='##{station.id}'>#{station.nbBikes} <small>b</small> #{station.nbEmptyDocks||0} <small>d</small> #{station.name} </a></li>"
 
   content = ""
   content += "<b>Your top viewed stations:</b><br/><br/><ul data-role='listview' data-theme='g'>"+frequentStations.sortedList()+"</ul><br/>" unless frequentStations.empty()
